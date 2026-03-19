@@ -86,7 +86,7 @@ func main() {
 		slog.Error("failed to initialize tracer", "error", err)
 		os.Exit(1)
 	}
-	defer shutdownTracer(ctx)
+	defer shutdownTracer(ctx) //nolint:errcheck
 
 	cfg := mysql.Config{
 		User:                 os.Getenv("DATABASE_USER"),

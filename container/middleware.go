@@ -50,9 +50,9 @@ func tracingMiddleware() fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 		headers := make(propagation.MapCarrier)
-		c.Request().Header.VisitAll(func(key, val []byte) {
+		for key, val := range c.Request().Header.All() {
 			headers[string(key)] = string(val)
-		})
+		}
 		ctx := propagator.Extract(c.Context(), headers)
 		spanName := c.Method() + " " + c.Path()
 		ctx, span := tracer.Start(ctx, spanName)

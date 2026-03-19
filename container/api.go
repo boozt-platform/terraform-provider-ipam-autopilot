@@ -125,7 +125,7 @@ func CreateNewRange(c *fiber.Ctx) error {
 	//  Parse body into RangeRequest struct
 	if err := c.BodyParser(&p); err != nil {
 		fmt.Printf("Failed parsing body. %s Bad format %v", string(c.Body()), err)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return c.Status(400).JSON(&fiber.Map{
 			"success": false,
 			"message": fmt.Sprintf("Bad format %v", err),
@@ -137,7 +137,7 @@ func CreateNewRange(c *fiber.Ctx) error {
 		routingDomain, err = GetDefaultRoutingDomainFromDB(tx)
 		if err != nil {
 			fmt.Printf("Error %v", err)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{
 				"success": false,
 				"message": "Couldn't retrieve default routing domain",
@@ -154,7 +154,7 @@ func CreateNewRange(c *fiber.Ctx) error {
 		routingDomain, err = GetRoutingDomainFromDB(domain_id)
 		if err != nil {
 			fmt.Printf("Error %v", err)
-			tx.Rollback()
+			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{
 				"success": false,
 				"message": "Couldn't retrieve default routing domain",
@@ -200,7 +200,7 @@ func directInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDomain *Routi
 		p.Cidr)
 
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return c.Status(503).JSON(&fiber.Map{
 			"success": false,
 			"message": fmt.Sprintf("Unable to create new Subnet Lease %v", err),
@@ -234,7 +234,7 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 		} else {
 			parent, err = GetRangeFromDBWithTx(tx, parent_id)
 			if err != nil {
-				tx.Rollback()
+				_ = tx.Rollback()
 				return c.Status(503).JSON(&fiber.Map{
 					"success": false,
 					"message": fmt.Sprintf("Unable to create new Subnet Lease  %v", err),
@@ -250,7 +250,7 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 	range_size := p.Range_size
 	subnet_ranges, err := GetRangesForParentFromDB(tx, int64(parent.Subnet_id))
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return c.Status(503).JSON(&fiber.Map{
 			"success": false,
 			"message": fmt.Sprintf("Unable to create new Subnet Lease  %v", err),
@@ -263,7 +263,7 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 		log.Printf("Looking for subnets in vpcs %v", vpcs)
 		ranges, err := GetRangesForNetwork(fmt.Sprintf("organizations/%s", os.Getenv("CAI_ORG_ID")), vpcs)
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{
 				"success": false,
 				"message": fmt.Sprintf("error %v", err),
@@ -297,7 +297,7 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 
 	subnet, subnetOnes, err := findNextSubnet(int(range_size), parent.Cidr, subnet_ranges)
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return c.Status(503).JSON(&fiber.Map{
 			"success": false,
 			"message": fmt.Sprintf("Unable to create new Subnet Lease %v", err),
@@ -309,7 +309,7 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 	id, err := CreateRangeInDb(tx, int64(parent.Subnet_id), routingDomain.Id, p.Name, fmt.Sprintf("%s/%d", subnet.IP.To4().String(), subnetOnes))
 
 	if err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return c.Status(503).JSON(&fiber.Map{
 			"success": false,
 			"message": fmt.Sprintf("Unable to create new Subnet Lease %v", err),

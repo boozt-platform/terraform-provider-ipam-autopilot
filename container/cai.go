@@ -21,8 +21,8 @@ import (
 	"reflect"
 
 	asset "cloud.google.com/go/asset/apiv1"
+	assetpb "cloud.google.com/go/asset/apiv1/assetpb"
 	"google.golang.org/api/iterator"
-	assetpb "google.golang.org/genproto/googleapis/cloud/asset/v1"
 )
 
 type CaiSecondaryRange struct {
@@ -44,7 +44,7 @@ func GetRangesForNetwork(parent string, networks []string) ([]CaiRange, error) {
 		return nil, err
 	}
 
-	defer client.Close()
+	defer client.Close() //nolint:errcheck
 
 	itr := client.ListAssets(ctx, &assetpb.ListAssetsRequest{
 		Parent:      parent,
@@ -52,18 +52,14 @@ func GetRangesForNetwork(parent string, networks []string) ([]CaiRange, error) {
 		ContentType: assetpb.ContentType_RESOURCE,
 	})
 
-	var ranges []CaiRange = make([]CaiRange, 0)
+	ranges := make([]CaiRange, 0)
 
-	asset, err := itr.Next()
-	for {
-		if err == iterator.Done {
-			break
-		}
+	for asset, err := itr.Next(); err != iterator.Done; asset, err = itr.Next() {
 		if err != nil {
 			log.Fatal(err)
 		}
 		if containsValue(networks, asset.Resource.Data.Fields["network"].GetStringValue()) {
-			var secondaryRanges []CaiSecondaryRange = make([]CaiSecondaryRange, 0)
+			secondaryRanges := make([]CaiSecondaryRange, 0)
 			secondary := asset.Resource.Data.Fields["secondaryIpRanges"].GetListValue().AsSlice()
 			for i := 0; i < len(secondary); i++ {
 				var rangeName string
@@ -95,7 +91,6 @@ func GetRangesForNetwork(parent string, networks []string) ([]CaiRange, error) {
 		} else {
 			log.Printf("Ignoring network %s", asset.Resource.Data.Fields["network"].GetStringValue())
 		}
-		asset, err = itr.Next()
 	}
 	return ranges, nil
 }

@@ -60,7 +60,7 @@ func GetRangesFromDB() ([]Range, error) {
 		}
 		parent_id := -1
 		if tmp.Status == pgtype.Present {
-			tmp.AssignTo(&parent_id)
+			_ = tmp.AssignTo(&parent_id)
 		}
 
 		ranges = append(ranges, Range{
@@ -92,7 +92,7 @@ func GetRangesForParentFromDB(tx *sql.Tx, parent_id int64) ([]Range, error) {
 		}
 		parent_id := -1
 		if tmp.Status == pgtype.Present {
-			tmp.AssignTo(&parent_id)
+			_ = tmp.AssignTo(&parent_id)
 		}
 
 		ranges = append(ranges, Range{
@@ -120,7 +120,7 @@ func GetRangeFromDB(id int64) (*Range, error) {
 	}
 	parent_id := -1
 	if tmp.Status == pgtype.Present {
-		tmp.AssignTo(&parent_id)
+		_ = tmp.AssignTo(&parent_id)
 	}
 
 	return &Range{
@@ -146,7 +146,7 @@ func GetRangeFromDBWithTx(tx *sql.Tx, id int64) (*Range, error) {
 	}
 	parent_id := -1
 	if tmp.Status == pgtype.Present {
-		tmp.AssignTo(&parent_id)
+		_ = tmp.AssignTo(&parent_id)
 	}
 
 	return &Range{
@@ -171,7 +171,7 @@ func getRangeByCidrAndRoutingDomain(tx *sql.Tx, request_cidr string, routing_dom
 
 	parent_id := -1
 	if tmp.Status == pgtype.Present {
-		tmp.AssignTo(&parent_id)
+		_ = tmp.AssignTo(&parent_id)
 	}
 
 	return &Range{
@@ -202,7 +202,7 @@ func GetRangeByCidrFromDB(tx *sql.Tx, routing_domain_id int, cidr_request string
 	}
 	parent_id := -1
 	if tmp.Status == pgtype.Present {
-		tmp.AssignTo(&parent_id)
+		_ = tmp.AssignTo(&parent_id)
 	}
 
 	return &Range{
