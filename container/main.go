@@ -42,11 +42,11 @@ func main() {
 	defer shutdownTracer(ctx) //nolint:errcheck
 
 	cfg := mysql.Config{
-		User:                 os.Getenv("DATABASE_USER"),
-		Passwd:               os.Getenv("DATABASE_PASSWORD"),
-		Net:                  os.Getenv("DATABASE_NET"),
-		Addr:                 os.Getenv("DATABASE_HOST"),
-		DBName:               os.Getenv("DATABASE_NAME"),
+		User:                 os.Getenv("IPAM_DATABASE_USER"),
+		Passwd:               os.Getenv("IPAM_DATABASE_PASSWORD"),
+		Net:                  os.Getenv("IPAM_DATABASE_NET"),
+		Addr:                 os.Getenv("IPAM_DATABASE_HOST"),
+		DBName:               os.Getenv("IPAM_DATABASE_NAME"),
 		MultiStatements:      true,
 		AllowNativePasswords: true,
 	}
@@ -60,8 +60,8 @@ func main() {
 	db.SetMaxIdleConns(5)
 	defer db.Close()
 
-	if os.Getenv("DISABLE_DATABASE_MIGRATION") != "TRUE" {
-		if err = server.MigrateDatabase(os.Getenv("DATABASE_NAME"), db); err != nil {
+	if os.Getenv("IPAM_DISABLE_DATABASE_MIGRATION") != "TRUE" {
+		if err = server.MigrateDatabase(os.Getenv("IPAM_DATABASE_NAME"), db); err != nil {
 			slog.Error("failed to migrate database", "error", err)
 			os.Exit(1)
 		}
@@ -70,10 +70,10 @@ func main() {
 	app := server.NewApp(db)
 
 	port := int64(8080)
-	if os.Getenv("PORT") != "" {
-		port, err = strconv.ParseInt(os.Getenv("PORT"), 10, 64)
+	if os.Getenv("IPAM_PORT") != "" {
+		port, err = strconv.ParseInt(os.Getenv("IPAM_PORT"), 10, 64)
 		if err != nil {
-			slog.Error("failed to parse PORT", "value", os.Getenv("PORT"), "error", err)
+			slog.Error("failed to parse PORT", "value", os.Getenv("IPAM_PORT"), "error", err)
 			os.Exit(1)
 		}
 	}

@@ -452,12 +452,12 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 			"message": fmt.Sprintf("Unable to create new Subnet Lease  %v", err),
 		})
 	}
-	if os.Getenv("CAI_ORG_ID") != "" {
-		log.Printf("CAI for org %s enabled", os.Getenv("CAI_ORG_ID"))
+	if os.Getenv("IPAM_CAI_ORG_ID") != "" {
+		log.Printf("CAI for org %s enabled", os.Getenv("IPAM_CAI_ORG_ID"))
 		// Integrating ranges from the VPC -- start
 		vpcs := strings.Split(routingDomain.Vpcs, ",")
 		log.Printf("Looking for subnets in vpcs %v", vpcs)
-		ranges, err := GetRangesForNetwork(fmt.Sprintf("organizations/%s", os.Getenv("CAI_ORG_ID")), vpcs)
+		ranges, err := GetRangesForNetwork(fmt.Sprintf("organizations/%s", os.Getenv("IPAM_CAI_ORG_ID")), vpcs)
 		if err != nil {
 			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{

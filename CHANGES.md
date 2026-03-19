@@ -64,7 +64,7 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
   (`domains_test.go`, `ranges_test.go`, `audit_log_test.go`, `legacy_test.go`, `helpers_test.go`);
   unit tests for subnet logic moved to `container/server/subnet_test.go`
 
-## Phase 5: Bulk import
+## Phase 5: Bulk import + env variable consistency
 
 - **Added `POST /api/v1/ranges/import`** — import pre-existing CIDRs into IPAM without
   auto-allocation; accepts an array of `{ name, cidr, domain?, parent?, labels? }` items;
@@ -72,6 +72,16 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
   `{ imported, skipped, errors }` summary; each imported range is written to the audit log;
   use case: register manually-assigned subnets before enabling IPAM management, then
   `terraform import` them into Terraform state
+- **Added `IPAM_DISABLE_BULK_IMPORT`** — set `TRUE` to disable the import endpoint (e.g. in
+  production environments where arbitrary CIDR registration is undesirable)
+- **Renamed all env variables to use `IPAM_` prefix** — `DATABASE_USER` →
+  `IPAM_DATABASE_USER`, `CAI_ORG_ID` → `IPAM_CAI_ORG_ID`, `GCP_IDENTITY_TOKEN` →
+  `IPAM_IDENTITY_TOKEN`, etc.; `OTEL_EXPORTER_OTLP_ENDPOINT` kept as-is (OpenTelemetry
+  standard); full list in README
+- **Added CAI integration documentation** — explains VPC scoping per routing domain and
+  how CAI prevents collision with subnets not registered in IPAM
+- **Added bulk import workflow documentation** — step-by-step guide for adopting an
+  existing VPC into IPAM management including `terraform import` steps
 
 ## Planned changes (not yet implemented)
 
