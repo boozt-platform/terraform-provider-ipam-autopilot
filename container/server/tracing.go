@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package server
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-func initTracer(ctx context.Context) (func(context.Context) error, error) {
+func InitTracer(ctx context.Context) (func(context.Context) error, error) {
 	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if endpoint == "" {
 		otel.SetTracerProvider(noop.NewTracerProvider())

@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// Copyright 2026 Boozt Fashion AB (modifications)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package server
 
 import (
 	"database/sql"
+	"embed"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
+
 func MigrateDatabase(dbName string, db *sql.DB) error {
-	var err error
-	driver, _ := mysql.WithInstance(db, &mysql.Config{})
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
-		dbName,
-		driver)
+	source, err := iofs.New(migrationsFS, "migrations")
+	if err != nil {
+		return err
+	}
+	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	if err != nil {
+		return err
+	}
+	m, err := migrate.NewWithInstance("iofs", source, dbName, driver)
 	if err != nil {
 		log.Printf("%v", err)
 		return err
@@ -39,11 +47,9 @@ func MigrateDatabase(dbName string, db *sql.DB) error {
 		if err == migrate.ErrNoChange {
 			log.Printf("No DB migration was necessary")
 			return nil
-		} else {
-			log.Printf("%v", err)
-			return err
-
 		}
+		log.Printf("%v", err)
+		return err
 	}
 	return nil
 }

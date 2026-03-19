@@ -55,6 +55,14 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - **Added audit log** — new `audit_logs` table (migration `1773964900_create_audit_logs_table`);
   `GET /api/v1/audit?limit=N` returns last N events (default 100, max 1000); events written on
   every create/delete of ranges and routing domains, including `cidr` in detail for ranges
+- **Refactored container into `server` sub-package** — all app logic moved to `container/server/`
+  (`package server`); `container/main.go` is now a thin entry point; enables integration tests to
+  import `server.NewApp` and `server.MigrateDatabase` without `package main` restrictions
+- **Embedded SQL migrations** — `//go:embed migrations/*.sql` + `iofs` source; migrations are
+  baked into the binary; `Dockerfile` no longer copies the `migrations/` directory separately
+- **Refactored integration tests into `container/tests/`** — split into topic files
+  (`domains_test.go`, `ranges_test.go`, `audit_log_test.go`, `legacy_test.go`, `helpers_test.go`);
+  unit tests for subnet logic moved to `container/server/subnet_test.go`
 
 ## Planned changes (not yet implemented)
 

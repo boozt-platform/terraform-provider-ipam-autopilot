@@ -21,7 +21,6 @@ COPY ./container /go/src/app
 RUN CGO_ENABLED=0 go build -o /go/bin/app .
 
 FROM gcr.io/distroless/static-debian12
-COPY ./container/migrations /migrations
 COPY ./infrastructure/output /terraform
 COPY --from=build /go/bin/app /
 CMD ["/app"]
