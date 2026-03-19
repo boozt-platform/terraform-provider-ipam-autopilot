@@ -24,9 +24,11 @@ jobs:
           go-version: "1.26"
       - uses: golangci/golangci-lint-action@v6
         with:
+          version: v2.11.3
           working-directory: container
       - uses: golangci/golangci-lint-action@v6
         with:
+          version: v2.11.3
           working-directory: provider
 
   unit:
