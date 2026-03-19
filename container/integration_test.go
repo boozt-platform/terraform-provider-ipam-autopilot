@@ -364,6 +364,48 @@ func TestCreateRange_WithLabels(t *testing.T) {
 	assert.Equal(t, "gke-nodes", labels["purpose"])
 }
 
+func TestGetRanges_FilterByName(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := newApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "alpha",
+		"cidr":   "10.10.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+	doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "beta",
+		"cidr":   "10.11.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+
+	status, body := doRequestWithStatus(app, "GET", "/api/v1/ranges?name=alpha", nil)
+	assert.Equal(t, 200, status)
+
+	var resp []map[string]interface{}
+	require.NoError(t, json.Unmarshal(body, &resp))
+	require.Len(t, resp, 1)
+	assert.Equal(t, "alpha", resp[0]["name"])
+	assert.Equal(t, "10.10.0.0/24", resp[0]["cidr"])
+}
+
+func TestCreateRange_NameRequired(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := newApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	status, _ := doRequestWithStatus(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"cidr":   "10.20.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+	assert.Equal(t, 400, status)
+}
+
 // --- Legacy route backward compat ---
 
 func TestLegacyRoutesStillWork(t *testing.T) {

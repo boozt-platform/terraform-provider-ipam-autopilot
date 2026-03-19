@@ -63,10 +63,18 @@ func marshalLabels(labels map[string]string) interface{} {
 	return string(b)
 }
 
-func GetRangesFromDB() ([]Range, error) {
+func GetRangesFromDB(nameFilter string) ([]Range, error) {
 	var ranges []Range
 
-	rows, err := db.Query("SELECT subnet_id, parent_id, routing_domain_id, name, cidr, labels FROM subnets")
+	var (
+		rows *sql.Rows
+		err  error
+	)
+	if nameFilter != "" {
+		rows, err = db.Query("SELECT subnet_id, parent_id, routing_domain_id, name, cidr, labels FROM subnets WHERE name = ?", nameFilter)
+	} else {
+		rows, err = db.Query("SELECT subnet_id, parent_id, routing_domain_id, name, cidr, labels FROM subnets")
+	}
 	if err != nil {
 		return nil, err
 	}

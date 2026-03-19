@@ -50,7 +50,7 @@ type RangeRequest struct {
 
 func GetRanges(c *fiber.Ctx) error {
 	var results []*fiber.Map
-	ranges, err := GetRangesFromDB()
+	ranges, err := GetRangesFromDB(c.Query("name"))
 	if err != nil {
 		return c.Status(503).JSON(&fiber.Map{
 			"success": false,
@@ -135,6 +135,23 @@ func CreateNewRange(c *fiber.Ctx) error {
 		})
 	}
 
+	if p.Name == "" {
+		_ = tx.Rollback()
+		return c.Status(400).JSON(&fiber.Map{
+			"success": false,
+			"message": "name is required",
+		})
+	}
+	for k, v := range p.Labels {
+		if k == "" || v == "" {
+			_ = tx.Rollback()
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": "label keys and values must not be empty",
+			})
+		}
+	}
+
 	var routingDomain *RoutingDomain
 	if p.Domain == "" {
 		routingDomain, err = GetDefaultRoutingDomainFromDB(tx)
@@ -217,8 +234,10 @@ func directInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDomain *Routi
 	}
 
 	return c.Status(200).JSON(&fiber.Map{
-		"id":   id,
-		"cidr": p.Cidr,
+		"id":     id,
+		"name":   p.Name,
+		"cidr":   p.Cidr,
+		"labels": p.Labels,
 	})
 }
 
@@ -325,9 +344,12 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 		log.Fatal(err)
 	}
 
+	allocatedCidr := fmt.Sprintf("%s/%d", subnet.IP.To4().String(), subnetOnes)
 	return c.Status(200).JSON(&fiber.Map{
-		"id":   id,
-		"cidr": fmt.Sprintf("%s/%d", subnet.IP.To4().String(), subnetOnes),
+		"id":     id,
+		"name":   p.Name,
+		"cidr":   allocatedCidr,
+		"labels": p.Labels,
 	})
 }
 

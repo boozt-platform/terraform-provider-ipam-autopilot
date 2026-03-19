@@ -39,8 +39,10 @@ func Provider() *schema.Provider {
 			"ipam_ip_range":       resources.ResourceIpRange(),
 			"ipam_routing_domain": resources.ResourceRoutingDomain(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{},
-		ConfigureFunc:  providerConfigure,
+		DataSourcesMap: map[string]*schema.Resource{
+			"ipam_ip_range": resources.DataSourceIpRange(),
+		},
+		ConfigureFunc: providerConfigure,
 	}
 }
 

@@ -44,6 +44,11 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
   (migration `1773964800_add_labels_to_subnets`); API accepts and returns `labels` map on
   `POST /ranges` and `GET /ranges/:id`; Terraform provider exposes `labels` attribute on
   `ipam_ip_range` resource
+- **Added `ipam_ip_range` data source** — look up an existing range by name without
+  allocating a new one; uses `GET /ranges?name=` filter added to the API
+- **Added `name` validation** — `POST /ranges` returns 400 if `name` is missing
+- **Added `labels` validation** — `POST /ranges` returns 400 if any label key or value is empty
+- **Expanded POST /ranges response** — now returns `id`, `name`, `cidr`, and `labels`
 
 ## Planned changes (not yet implemented)
 

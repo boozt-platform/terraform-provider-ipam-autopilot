@@ -58,6 +58,14 @@ resource "ipam_ip_range" "gke_nodes" {
   }
 }
 
+data "ipam_ip_range" "gke_nodes_lookup" {
+  name = ipam_ip_range.gke_nodes.name
+}
+
 output "gke_nodes_cidr" {
   value = ipam_ip_range.gke_nodes.cidr
+}
+
+output "gke_nodes_cidr_via_datasource" {
+  value = data.ipam_ip_range.gke_nodes_lookup.cidr
 }
