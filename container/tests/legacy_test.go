@@ -12,19 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+//go:build integration
+
+package tests
 
 import (
-	"log/slog"
-	"os"
+	"testing"
+
+	"github.com/boozt-platform/ipam-autopilot/container/server"
+	"github.com/stretchr/testify/assert"
 )
 
-func initLogger() *slog.Logger {
-	var handler slog.Handler
-	if os.Getenv("LOG_FORMAT") == "text" {
-		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-	} else {
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-	}
-	return slog.New(handler)
+func TestLegacyRoutesStillWork(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := server.NewApp(database)
+
+	// Old /domains path should still work (for Terraform provider compat)
+	status, _ := doRequestWithStatus(app, "GET", "/domains", nil)
+	assert.Equal(t, 200, status)
+
+	status, _ = doRequestWithStatus(app, "GET", "/ranges", nil)
+	assert.Equal(t, 200, status)
 }
