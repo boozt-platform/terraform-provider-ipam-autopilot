@@ -110,11 +110,28 @@ Legacy paths (`/ranges`, `/domains`) are kept for Terraform provider backward co
 
 ## Cloud Asset Inventory integration
 
-When `IPAM_CAI_ORG_ID` is set, IPAM Autopilot queries [Cloud Asset Inventory](https://cloud.google.com/asset-inventory) during auto-allocation (`POST /ranges` with `range_size`) to discover existing VPC subnets across your GCP organisation.
+When `IPAM_CAI_ORG_ID` is set, IPAM Autopilot uses [Cloud Asset Inventory](https://cloud.google.com/asset-inventory) to discover existing VPC subnets across your GCP organisation and merge them with IPAM DB allocations before the collision avoidance algorithm runs. This prevents double-allocation even for subnets that exist in GCP but were never registered in IPAM.
 
-Discovered subnets are merged with IPAM DB allocations before the collision avoidance algorithm runs. This prevents double-allocation even for subnets that exist in GCP but were never registered in IPAM (for example, subnets created manually or outside of Terraform).
+**VPC scoping** — Each routing domain has an optional list of VPCs. Only subnets belonging to the domain's VPCs are considered. This means IPAM is safe to use across multiple independent VPCs: allocating a `/22` for `prod-vpc` will not be blocked by subnets in `staging-vpc` if they are in separate routing domains.
 
-**VPC scoping** — Each routing domain has an optional list of VPCs. When `IPAM_CAI_ORG_ID` is set, only subnets belonging to the domain's VPCs are considered. This means IPAM is safe to use across multiple independent VPCs: allocating a `/22` for `prod-vpc` will not be blocked by subnets in `staging-vpc` if they are in separate routing domains.
+**VPC name format** — The VPC list in a routing domain accepts both full resource URLs and short names:
+
+```
+# Full URL (as returned by gcloud)
+https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-vpc
+
+# Short name — simpler, works the same way
+my-vpc
+```
+
+**Two modes**
+
+| Mode | Config | Behaviour |
+|---|---|---|
+| Live (default) | `IPAM_CAI_ORG_ID` only | CAI API is queried on every `POST /ranges` with `range_size`; always up to date, adds latency per allocation |
+| DB sync | `IPAM_CAI_ORG_ID` + `IPAM_CAI_DB_SYNC=TRUE` | Subnets are synced into a local `cai_subnets` table on startup and refreshed every `IPAM_CAI_SYNC_INTERVAL` (default `5m`) in the background; allocations read from DB — fast, no per-request CAI latency |
+
+Use **DB sync mode** when you have many allocations per minute or want to reduce CAI API calls. Use **live mode** when you need guaranteed up-to-date collision avoidance and allocation frequency is low.
 
 **Required IAM** — The Cloud Run service account needs `roles/cloudasset.viewer` at the organisation level.
 
