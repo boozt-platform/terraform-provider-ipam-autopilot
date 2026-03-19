@@ -22,9 +22,10 @@ import (
 	"os"
 	"strconv"
 
+	"database/sql"
+
 	"github.com/boozt-platform/ipam-autopilot/container/server"
 	"github.com/go-sql-driver/mysql"
-	"database/sql"
 )
 
 func main() {
