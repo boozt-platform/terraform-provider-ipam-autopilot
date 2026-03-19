@@ -1,0 +1,7 @@
+IPAM Autopilot
+Copyright 2022 Google LLC
+
+This product is based on ipam-autopilot, originally developed by Google LLC.
+Original source: https://github.com/GoogleCloudPlatform/professional-services/tree/main/tools/ipam-autopilot
+
+Modifications by Boozt Fashion AB are documented in CHANGES.md.
