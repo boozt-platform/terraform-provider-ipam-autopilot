@@ -42,6 +42,7 @@ func NewApp(database *sql.DB) *fiber.App {
 
 	// API v1
 	v1 := app.Group("/api/v1")
+	v1.Post("/ranges/import", ImportRanges)
 	v1.Post("/ranges", CreateNewRange)
 	v1.Get("/ranges", GetRanges)
 	v1.Get("/ranges/:id", GetRange)

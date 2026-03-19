@@ -48,6 +48,135 @@ type RangeRequest struct {
 	Labels     map[string]string `json:"labels"`
 }
 
+type ImportRangeItem struct {
+	Name   string            `json:"name"`
+	Cidr   string            `json:"cidr"`
+	Domain string            `json:"domain"`
+	Parent string            `json:"parent"`
+	Labels map[string]string `json:"labels"`
+}
+
+type ImportError struct {
+	Name  string `json:"name"`
+	Cidr  string `json:"cidr"`
+	Error string `json:"error"`
+}
+
+type ImportResult struct {
+	Imported int           `json:"imported"`
+	Skipped  int           `json:"skipped"`
+	Errors   []ImportError `json:"errors"`
+}
+
+func ImportRanges(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	var items []ImportRangeItem
+	if err := c.BodyParser(&items); err != nil {
+		return c.Status(400).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("Bad format %v", err),
+		})
+	}
+
+	result := ImportResult{Errors: []ImportError{}}
+
+	for _, item := range items {
+		if item.Name == "" {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: "name is required"})
+			continue
+		}
+		if len(item.Name) > 255 {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: "name must not exceed 255 characters"})
+			continue
+		}
+		if item.Cidr == "" {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: "cidr is required"})
+			continue
+		}
+		labelErr := false
+		for k, v := range item.Labels {
+			if k == "" || v == "" {
+				result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: "label keys and values must not be empty"})
+				labelErr = true
+				break
+			}
+			if len(k) > 63 {
+				result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("label key %q must not exceed 63 characters", k)})
+				labelErr = true
+				break
+			}
+			if len(v) > 255 {
+				result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("label value for key %q must not exceed 255 characters", k)})
+				labelErr = true
+				break
+			}
+		}
+		if labelErr {
+			continue
+		}
+
+		var routingDomain *RoutingDomain
+		var err error
+		if item.Domain == "" {
+			routingDomain, err = getDefaultRoutingDomain()
+		} else {
+			domainID, parseErr := strconv.ParseInt(item.Domain, 10, 64)
+			if parseErr != nil {
+				result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("invalid domain: %v", parseErr)})
+				continue
+			}
+			routingDomain, err = GetRoutingDomainFromDB(domainID)
+		}
+		if err != nil {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("could not resolve domain: %v", err)})
+			continue
+		}
+
+		exists, err := rangeExistsByCidrAndDomain(item.Cidr, routingDomain.Id)
+		if err != nil {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("database error: %v", err)})
+			continue
+		}
+		if exists {
+			result.Skipped++
+			continue
+		}
+
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("database error: %v", err)})
+			continue
+		}
+
+		parentID := int64(-1)
+		if item.Parent != "" {
+			parentID, err = strconv.ParseInt(item.Parent, 10, 64)
+			if err != nil {
+				_ = tx.Rollback()
+				result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("invalid parent: %v", err)})
+				continue
+			}
+		}
+
+		id, err := CreateRangeInDb(tx, parentID, routingDomain.Id, item.Name, item.Cidr, item.Labels)
+		if err != nil {
+			_ = tx.Rollback()
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("failed to import: %v", err)})
+			continue
+		}
+		if err = tx.Commit(); err != nil {
+			result.Errors = append(result.Errors, ImportError{Name: item.Name, Cidr: item.Cidr, Error: fmt.Sprintf("commit failed: %v", err)})
+			continue
+		}
+
+		writeAuditLog(ActionCreate, ResourceRange, int(id), item.Name, map[string]string{"cidr": item.Cidr})
+		result.Imported++
+	}
+
+	return c.Status(200).JSON(result)
+}
+
 func GetRanges(c *fiber.Ctx) error {
 	var results []*fiber.Map
 	ranges, err := GetRangesFromDB(c.Query("name"))
