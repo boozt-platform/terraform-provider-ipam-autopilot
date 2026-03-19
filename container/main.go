@@ -17,12 +17,12 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
-
-	"database/sql"
+	"time"
 
 	"github.com/boozt-platform/ipam-autopilot/container/server"
 	"github.com/go-sql-driver/mysql"
@@ -68,6 +68,21 @@ func main() {
 	}
 
 	app := server.NewApp(db)
+
+	if orgID := os.Getenv("IPAM_CAI_ORG_ID"); orgID != "" {
+		interval := 5 * time.Minute
+		if raw := os.Getenv("IPAM_CAI_SYNC_INTERVAL"); raw != "" {
+			if d, err := time.ParseDuration(raw); err == nil {
+				interval = d
+			} else {
+				slog.Warn("invalid IPAM_CAI_SYNC_INTERVAL, using default", "value", raw, "default", interval)
+			}
+		}
+		if err := server.StartCAISyncLoop(ctx, orgID, interval); err != nil {
+			slog.Error("CAI sync failed on startup", "error", err)
+			os.Exit(1)
+		}
+	}
 
 	port := int64(8080)
 	if os.Getenv("IPAM_PORT") != "" {

@@ -452,43 +452,21 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 			"message": fmt.Sprintf("Unable to create new Subnet Lease  %v", err),
 		})
 	}
-	if os.Getenv("IPAM_CAI_ORG_ID") != "" {
-		log.Printf("CAI for org %s enabled", os.Getenv("IPAM_CAI_ORG_ID"))
-		// Integrating ranges from the VPC -- start
+	if os.Getenv("IPAM_CAI_ORG_ID") != "" && routingDomain.Vpcs != "" {
 		vpcs := strings.Split(routingDomain.Vpcs, ",")
-		log.Printf("Looking for subnets in vpcs %v", vpcs)
-		ranges, err := GetRangesForNetwork(fmt.Sprintf("organizations/%s", os.Getenv("IPAM_CAI_ORG_ID")), vpcs)
+		caiRanges, err := GetCAISubnetsForNetworks(vpcs)
 		if err != nil {
 			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{
 				"success": false,
-				"message": fmt.Sprintf("error %v", err),
+				"message": fmt.Sprintf("CAI DB query failed: %v", err),
 			})
 		}
-		log.Printf("Found %d subnets in vpcs %v", len(ranges), vpcs)
-
-		for j := 0; j < len(ranges); j++ {
-			vpc_range := ranges[j]
-			if !ContainsRange(subnet_ranges, vpc_range.cidr) {
-				log.Printf("Adding range %s from CAI", vpc_range.cidr)
-				subnet_ranges = append(subnet_ranges, Range{
-					Cidr: vpc_range.cidr,
-				})
-			}
-
-			for k := 0; k < len(vpc_range.secondaryRanges); k++ {
-				secondaryRange := vpc_range.secondaryRanges[k]
-				if !ContainsRange(subnet_ranges, secondaryRange.cidr) {
-					log.Printf("Adding secondary range %s from CAI", vpc_range.cidr)
-					subnet_ranges = append(subnet_ranges, Range{
-						Cidr: secondaryRange.cidr,
-					})
-				}
+		for _, r := range caiRanges {
+			if !ContainsRange(subnet_ranges, r.Cidr) {
+				subnet_ranges = append(subnet_ranges, r)
 			}
 		}
-		// Integrating ranges from the VPC -- end
-	} else {
-		log.Printf("Not checking CAI, env variable with Org ID not set")
 	}
 
 	subnet, subnetOnes, err := findNextSubnet(int(range_size), parent.Cidr, subnet_ranges)

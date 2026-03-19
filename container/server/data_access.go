@@ -259,6 +259,32 @@ func GetRangeByCidrFromDB(tx *sql.Tx, routing_domain_id int, cidr_request string
 	}, nil
 }
 
+// GetCAISubnetsForNetworks returns all CIDRs from the cai_subnets table whose network
+// matches any of the given VPC identifiers. Both full URLs and short names are supported
+// (see vpcMatches).
+func GetCAISubnetsForNetworks(networks []string) ([]Range, error) {
+	rows, err := db.Query("SELECT network, cidr FROM cai_subnets")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() //nolint:errcheck
+
+	var result []Range
+	for rows.Next() {
+		var network, cidrVal string
+		if err := rows.Scan(&network, &cidrVal); err != nil {
+			return nil, err
+		}
+		for _, vpc := range networks {
+			if vpcMatches(vpc, network) {
+				result = append(result, Range{Cidr: cidrVal})
+				break
+			}
+		}
+	}
+	return result, rows.Err()
+}
+
 func rangeExistsByCidrAndDomain(cidrVal string, domainID int) (bool, error) {
 	var count int
 	err := db.QueryRow("SELECT COUNT(*) FROM subnets WHERE cidr = ? AND routing_domain_id = ?", cidrVal, domainID).Scan(&count)
