@@ -1,0 +1,29 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - unused
+  settings:
+    errcheck:
+      # defer Close/Rollback/Shutdown — standard Go pattern, errors intentionally ignored
+      exclude-functions:
+        - (io.Closer).Close
+        - (*database/sql.DB).Close
+        - (*database/sql.Tx).Rollback
+        - (context.CancelFunc)
+        - (*go.opentelemetry.io/otel/sdk/trace.TracerProvider).Shutdown
+  exclusions:
+    rules:
+      # Test files — relaxed errcheck
+      - path: "_test\\.go"
+        linters: [errcheck]
+

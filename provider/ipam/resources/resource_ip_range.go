@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -117,7 +117,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("unable to read response: %v", err)
 		}
@@ -127,10 +127,10 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("unable to unmarshal response body: %v", err)
 		}
 		d.SetId(fmt.Sprintf("%d", int(response["id"].(float64))))
-		d.Set("cidr", response["cidr"].(string))
+		_ = d.Set("cidr", response["cidr"].(string))
 		return nil
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed creating range status_code=%d, status=%s", resp.StatusCode, resp.Status)
 		}
@@ -159,7 +159,7 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 200 {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("unable to read response: %v", err)
 		}
@@ -169,10 +169,10 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("unable to unmarshal response body: %v", err)
 		}
 		d.SetId(fmt.Sprintf("%d", int(response["id"].(float64))))
-		d.Set("cidr", response["cidr"].(string))
+		_ = d.Set("cidr", response["cidr"].(string))
 		return nil
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed reading range status_code=%d, status=%s", resp.StatusCode, resp.Status)
 		}
@@ -203,7 +203,7 @@ func resourceDelete(d *schema.ResourceData, meta interface{}) error {
 	if resp.StatusCode == 200 {
 		return nil
 	} else {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return fmt.Errorf("failed releasing range status_code=%d, status=%s", resp.StatusCode, resp.Status)
 		}

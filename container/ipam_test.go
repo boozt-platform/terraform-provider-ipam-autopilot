@@ -34,7 +34,7 @@ func TestRangeCreationWithEmptyExisting(t *testing.T) {
 
 func TestRangeCreationWithExisting1(t *testing.T) {
 	existingRanges := []Range{
-		Range{
+		{
 			Cidr: "10.0.0.0/20",
 		},
 	}
@@ -49,10 +49,10 @@ func TestRangeCreationWithExisting1(t *testing.T) {
 
 func TestRangeCreationWithExisting2(t *testing.T) {
 	existingRanges := []Range{
-		Range{
+		{
 			Cidr: "10.0.0.0/20",
 		},
-		Range{
+		{
 			Cidr: "10.0.16.0/22",
 		},
 	}
@@ -67,10 +67,10 @@ func TestRangeCreationWithExisting2(t *testing.T) {
 
 func TestRangeCreationWithExisting3(t *testing.T) {
 	existingRanges := []Range{
-		Range{
+		{
 			Cidr: "10.0.0.0/22",
 		},
-		Range{
+		{
 			Cidr: "10.0.4.0/22",
 		},
 	}
@@ -85,7 +85,7 @@ func TestRangeCreationWithExisting3(t *testing.T) {
 
 func TestRangeCreationWithExisting4(t *testing.T) {
 	existingRanges := []Range{
-		Range{
+		{
 			Cidr: "10.128.0.0/20",
 		},
 	}
@@ -97,13 +97,13 @@ func TestRangeCreationWithExisting4(t *testing.T) {
 
 func TestRangeCreationWithExisting5(t *testing.T) {
 	existingRanges := []Range{
-		Range{
+		{
 			Cidr: "10.0.0.0/22",
 		},
-		Range{
+		{
 			Cidr: "10.0.4.0/22",
 		},
-		Range{
+		{
 			Cidr: "10.0.4.0/22",
 		},
 	}
