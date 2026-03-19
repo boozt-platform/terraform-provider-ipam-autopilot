@@ -17,6 +17,22 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - **Added `.github/workflows/release.yml`** — automated releases via go-semantic-release
   and conventional commits on merge to main
 
+## API
+
+- **Added `/api/v1` route group** — all IPAM endpoints now available under `/api/v1/ranges`
+  and `/api/v1/domains`; legacy paths kept for Terraform provider backward compatibility
+- **Added structured logging** — `log/slog` with JSON output (text via `LOG_FORMAT=text`),
+  request ID and access log on every request
+- **Added OpenTelemetry tracing** — OTLP gRPC exporter; noop when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is unset
+- **Updated Dockerfile** — Go 1.26, `distroless/static-debian12`
+
+## Development / Testing
+
+- **Added `docker-compose.yml`** — MySQL 8.4 + API + Jaeger for local development
+- **Added integration tests** — testcontainers-go (MySQL); covers all domain and range
+  endpoints including legacy route backward compat
+
 ## Planned changes (not yet implemented)
 
 See skill documentation for full roadmap:
