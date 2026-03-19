@@ -142,12 +142,33 @@ func CreateNewRange(c *fiber.Ctx) error {
 			"message": "name is required",
 		})
 	}
+	if len(p.Name) > 255 {
+		_ = tx.Rollback()
+		return c.Status(400).JSON(&fiber.Map{
+			"success": false,
+			"message": "name must not exceed 255 characters",
+		})
+	}
 	for k, v := range p.Labels {
 		if k == "" || v == "" {
 			_ = tx.Rollback()
 			return c.Status(400).JSON(&fiber.Map{
 				"success": false,
 				"message": "label keys and values must not be empty",
+			})
+		}
+		if len(k) > 63 {
+			_ = tx.Rollback()
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": fmt.Sprintf("label key %q must not exceed 63 characters", k),
+			})
+		}
+		if len(v) > 255 {
+			_ = tx.Rollback()
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": fmt.Sprintf("label value for key %q must not exceed 255 characters", k),
 			})
 		}
 	}

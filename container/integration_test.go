@@ -406,6 +406,58 @@ func TestCreateRange_NameRequired(t *testing.T) {
 	assert.Equal(t, 400, status)
 }
 
+func TestCreateRange_NameTooLong(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := newApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	status, body := doRequestWithStatus(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   string(make([]byte, 256)),
+		"cidr":   "10.21.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+	assert.Equal(t, 400, status)
+	assert.Contains(t, string(body), "255")
+}
+
+func TestCreateRange_LabelKeyTooLong(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := newApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	status, _ := doRequestWithStatus(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "valid-name",
+		"cidr":   "10.22.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+		"labels": map[string]string{
+			string(make([]byte, 64)): "value",
+		},
+	})
+	assert.Equal(t, 400, status)
+}
+
+func TestCreateRange_LabelValueTooLong(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := newApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	status, _ := doRequestWithStatus(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "valid-name",
+		"cidr":   "10.23.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+		"labels": map[string]string{
+			"key": string(make([]byte, 256)),
+		},
+	})
+	assert.Equal(t, 400, status)
+}
+
 // --- Legacy route backward compat ---
 
 func TestLegacyRoutesStillWork(t *testing.T) {
