@@ -1,0 +1,42 @@
+# Copyright 2026 Boozt Fashion AB
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+---
+name: Test
+"on":
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Test container
+        run: go test ./...
+        working-directory: container
+      - name: Test provider
+        run: go test ./...
+        working-directory: provider
+
+  integration:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+      - name: Integration tests (testcontainers)
+        run: go test -tags=integration -timeout=10m ./...
+        working-directory: container
