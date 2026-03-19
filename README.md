@@ -70,7 +70,8 @@ All environment variables are prefixed with `IPAM_`, except OpenTelemetry standa
 | Variable | Default | Description |
 |---|---|---|
 | `IPAM_CAI_ORG_ID` | | GCP organisation ID for Cloud Asset Inventory integration (see [CAI integration](#cloud-asset-inventory-integration)) |
-| `IPAM_CAI_SYNC_INTERVAL` | `5m` | How often to re-sync CAI subnets in the background (Go duration, e.g. `5m`, `1h`) |
+| `IPAM_CAI_DB_SYNC` | `FALSE` | Set `TRUE` to enable DB-backed CAI cache with background sync; default queries CAI live on each allocation |
+| `IPAM_CAI_SYNC_INTERVAL` | `5m` | Sync interval when `IPAM_CAI_DB_SYNC=TRUE` (Go duration, e.g. `5m`, `1h`) |
 | `IPAM_DISABLE_BULK_IMPORT` | `FALSE` | Set `TRUE` to disable `POST /api/v1/ranges/import` |
 | `IPAM_STORAGE_BUCKET` | | GCS bucket name for the legacy built-in provider registry |
 

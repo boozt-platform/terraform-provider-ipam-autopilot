@@ -452,14 +452,19 @@ func findNewLeaseAndInsert(c *fiber.Ctx, tx *sql.Tx, p RangeRequest, routingDoma
 			"message": fmt.Sprintf("Unable to create new Subnet Lease  %v", err),
 		})
 	}
-	if os.Getenv("IPAM_CAI_ORG_ID") != "" && routingDomain.Vpcs != "" {
+	if orgID := os.Getenv("IPAM_CAI_ORG_ID"); orgID != "" && routingDomain.Vpcs != "" {
 		vpcs := strings.Split(routingDomain.Vpcs, ",")
-		caiRanges, err := GetCAISubnetsForNetworks(vpcs)
+		var caiRanges []Range
+		if os.Getenv("IPAM_CAI_DB_SYNC") == "TRUE" {
+			caiRanges, err = GetCAISubnetsForNetworks(vpcs)
+		} else {
+			caiRanges, err = getLiveCAISubnetsForNetworks(context.Background(), orgID, vpcs)
+		}
 		if err != nil {
 			_ = tx.Rollback()
 			return c.Status(503).JSON(&fiber.Map{
 				"success": false,
-				"message": fmt.Sprintf("CAI DB query failed: %v", err),
+				"message": fmt.Sprintf("CAI lookup failed: %v", err),
 			})
 		}
 		for _, r := range caiRanges {

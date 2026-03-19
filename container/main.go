@@ -69,7 +69,7 @@ func main() {
 
 	app := server.NewApp(db)
 
-	if orgID := os.Getenv("IPAM_CAI_ORG_ID"); orgID != "" {
+	if orgID := os.Getenv("IPAM_CAI_ORG_ID"); orgID != "" && os.Getenv("IPAM_CAI_DB_SYNC") == "TRUE" {
 		interval := 5 * time.Minute
 		if raw := os.Getenv("IPAM_CAI_SYNC_INTERVAL"); raw != "" {
 			if d, err := time.ParseDuration(raw); err == nil {

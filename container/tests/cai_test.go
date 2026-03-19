@@ -42,7 +42,8 @@ func seedCAISubnets(t *testing.T, db *sql.DB, network string, cidrs []string) {
 // TestCAI_AllocationAvoidsSeededSubnets verifies that auto-allocation skips CIDRs
 // already present in cai_subnets for the domain's VPC.
 func TestCAI_AllocationAvoidsSeededSubnets(t *testing.T) {
-	t.Setenv("IPAM_CAI_ORG_ID", "fake-org") // enables CAI DB path
+	t.Setenv("IPAM_CAI_ORG_ID", "fake-org")
+	t.Setenv("IPAM_CAI_DB_SYNC", "TRUE")
 
 	database, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -94,6 +95,7 @@ func TestCAI_AllocationAvoidsSeededSubnets(t *testing.T) {
 // VPC name (e.g. "my-vpc") still matches full CAI network URLs.
 func TestCAI_ShortVpcNameMatches(t *testing.T) {
 	t.Setenv("IPAM_CAI_ORG_ID", "fake-org")
+	t.Setenv("IPAM_CAI_DB_SYNC", "TRUE")
 
 	database, cleanup := setupTestDB(t)
 	defer cleanup()
@@ -138,6 +140,7 @@ func TestCAI_ShortVpcNameMatches(t *testing.T) {
 // do not block allocation in an unrelated domain.
 func TestCAI_DifferentVpcNotAffected(t *testing.T) {
 	t.Setenv("IPAM_CAI_ORG_ID", "fake-org")
+	t.Setenv("IPAM_CAI_DB_SYNC", "TRUE")
 
 	database, cleanup := setupTestDB(t)
 	defer cleanup()

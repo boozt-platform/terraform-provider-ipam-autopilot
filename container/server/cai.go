@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	asset "cloud.google.com/go/asset/apiv1"
@@ -71,6 +72,25 @@ func fetchCAISubnets(ctx context.Context, parent string) ([]caiSubnet, error) {
 		}
 	}
 	return subnets, nil
+}
+
+// getLiveCAISubnetsForNetworks fetches subnets directly from the CAI API (no DB)
+// and filters them by the given VPC identifiers. Used when IPAM_CAI_DB_SYNC is not enabled.
+func getLiveCAISubnetsForNetworks(ctx context.Context, orgID string, networks []string) ([]Range, error) {
+	subnets, err := fetchCAISubnets(ctx, fmt.Sprintf("organizations/%s", orgID))
+	if err != nil {
+		return nil, err
+	}
+	var result []Range
+	for _, s := range subnets {
+		for _, vpc := range networks {
+			if vpcMatches(vpc, s.network) {
+				result = append(result, Range{Cidr: s.cidr})
+				break
+			}
+		}
+	}
+	return result, nil
 }
 
 // vpcMatches returns true if the storedVpc (from routing domain) matches a CAI network URL.
