@@ -24,9 +24,54 @@ import (
 	"strconv"
 	"time"
 
+	"cloud.google.com/go/cloudsqlconn"
+	cloudsqlmysql "cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/boozt-platform/ipam-autopilot/container/server"
 	"github.com/go-sql-driver/mysql"
 )
+
+func openDB(ctx context.Context) (*sql.DB, error) {
+	if os.Getenv("IPAM_DATABASE_IAM_AUTH") == "TRUE" {
+		return openDBWithIAMAuth(ctx)
+	}
+	return openDBWithPassword()
+}
+
+func openDBWithPassword() (*sql.DB, error) {
+	cfg := mysql.Config{
+		User:                 os.Getenv("IPAM_DATABASE_USER"),
+		Passwd:               os.Getenv("IPAM_DATABASE_PASSWORD"),
+		Net:                  os.Getenv("IPAM_DATABASE_NET"),
+		Addr:                 os.Getenv("IPAM_DATABASE_HOST"),
+		DBName:               os.Getenv("IPAM_DATABASE_NAME"),
+		MultiStatements:      true,
+		AllowNativePasswords: true,
+	}
+	return sql.Open("mysql", cfg.FormatDSN())
+}
+
+func openDBWithIAMAuth(ctx context.Context) (*sql.DB, error) {
+	cleanup, err := cloudsqlmysql.RegisterDriver("cloudsql-iam",
+		cloudsqlconn.WithIAMAuthN(),
+		cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPrivateIP()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("register cloudsql driver: %w", err)
+	}
+	// cleanup is intentionally not deferred here — it would close the dialer
+	// before the DB is done. The process lifetime manages it instead.
+	_ = cleanup
+
+	cfg := mysql.Config{
+		User:            os.Getenv("IPAM_DATABASE_USER"),
+		Addr:            os.Getenv("IPAM_DATABASE_INSTANCE"),
+		Net:             "cloudsql-iam",
+		DBName:          os.Getenv("IPAM_DATABASE_NAME"),
+		MultiStatements: true,
+		ParseTime:       true,
+	}
+	return sql.Open("cloudsql-iam", cfg.FormatDSN())
+}
 
 func main() {
 	ctx := context.Background()
@@ -41,17 +86,7 @@ func main() {
 	}
 	defer shutdownTracer(ctx) //nolint:errcheck
 
-	cfg := mysql.Config{
-		User:                 os.Getenv("IPAM_DATABASE_USER"),
-		Passwd:               os.Getenv("IPAM_DATABASE_PASSWORD"),
-		Net:                  os.Getenv("IPAM_DATABASE_NET"),
-		Addr:                 os.Getenv("IPAM_DATABASE_HOST"),
-		DBName:               os.Getenv("IPAM_DATABASE_NAME"),
-		MultiStatements:      true,
-		AllowNativePasswords: true,
-	}
-
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+	db, err := openDB(ctx)
 	if err != nil {
 		slog.Error("failed to open database", "error", err)
 		os.Exit(1)

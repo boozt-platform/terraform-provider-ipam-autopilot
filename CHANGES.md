@@ -7,6 +7,17 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 
 ---
 
+## Phase 8: Cloud SQL IAM Authentication
+
+- **Added `IPAM_DATABASE_IAM_AUTH`** — set `TRUE` to connect via Cloud SQL IAM auth using
+  `cloud.google.com/go/cloudsqlconn`; default keeps user/password for local dev
+- **Added `IPAM_DATABASE_INSTANCE`** — Cloud SQL instance connection name (`project:region:instance`),
+  required when IAM auth is enabled
+- When IAM auth is enabled, `IPAM_DATABASE_USER` is the Service Account email;
+  `IPAM_DATABASE_PASSWORD`, `IPAM_DATABASE_HOST`, and `IPAM_DATABASE_NET` are unused
+
+---
+
 ## Infrastructure / Build
 
 - **Go module paths** renamed from `github.com/GoogleCloudPlatform/professional-services/*`

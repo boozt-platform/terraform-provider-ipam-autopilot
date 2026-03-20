@@ -50,11 +50,13 @@ All environment variables are prefixed with `IPAM_`, except OpenTelemetry standa
 
 | Variable | Default | Description |
 |---|---|---|
-| `IPAM_DATABASE_USER` | | MySQL username |
-| `IPAM_DATABASE_PASSWORD` | | MySQL password |
-| `IPAM_DATABASE_HOST` | | MySQL `host:port` |
+| `IPAM_DATABASE_USER` | | MySQL username (or Service Account email when `IPAM_DATABASE_IAM_AUTH=TRUE`) |
+| `IPAM_DATABASE_PASSWORD` | | MySQL password (not used when `IPAM_DATABASE_IAM_AUTH=TRUE`) |
+| `IPAM_DATABASE_HOST` | | MySQL `host:port` (not used when `IPAM_DATABASE_IAM_AUTH=TRUE`) |
 | `IPAM_DATABASE_NAME` | | MySQL database name |
-| `IPAM_DATABASE_NET` | `tcp` | MySQL network type |
+| `IPAM_DATABASE_NET` | `tcp` | MySQL network type (not used when `IPAM_DATABASE_IAM_AUTH=TRUE`) |
+| `IPAM_DATABASE_IAM_AUTH` | `FALSE` | Set `TRUE` to connect via Cloud SQL IAM authentication |
+| `IPAM_DATABASE_INSTANCE` | | Cloud SQL instance connection name (`project:region:instance`) — required when `IPAM_DATABASE_IAM_AUTH=TRUE` |
 | `IPAM_DISABLE_DATABASE_MIGRATION` | `FALSE` | Set `TRUE` to skip auto-migration on startup |
 
 **Server**
