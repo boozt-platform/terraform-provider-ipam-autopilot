@@ -136,7 +136,7 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
   before MySQL's 300s wait_timeout expires, preventing stale connection errors
 - **Added `AllowCleartextPasswords: true`** — required for MySQL IAM token auth flow via
   Cloud SQL Auth Proxy; token is transmitted in cleartext over the local Unix socket
-- **Added `examples/sandbox`** — sandbox deployment example for testing (`INGRESS_TRAFFIC_ALL`,
+- **Added `examples/infra`** — sandbox deployment example for testing (`INGRESS_TRAFFIC_ALL`,
   `database_deletion_protection = false`, AR remote proxy for ghcr.io)
 
 ## Provider fixes
@@ -149,7 +149,7 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
   are accepted by authenticated (non-public) Cloud Run services
 - **Added `cloud_run_allow_unauthenticated` variable** — optional `allUsers` `roles/run.invoker`
   binding on the Cloud Run service; default `false`; enable for sandbox/testing only
-- **Added `examples/sandbox-client`** — demonstrates allocating IP ranges from a deployed IPAM
+- **Added `examples/sandbox-gcp-vpc`** — demonstrates allocating IP ranges from a deployed IPAM
   instance using the `ipam-client` module; includes one-liner to read URL from sandbox output
 - **Added validation to `modules/ipam-client` variables** — `name` non-empty, `range_size`
   1–32, `parent_cidr` valid CIDR via `can(cidrnetmask(...))`
@@ -157,6 +157,21 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - **Updated README** — removed outdated `infrastructure/` deployment instructions and GCS
   registry setup; documented `modules/ipam` and `modules/ipam-client` usage, authentication,
   and all environment variables
+
+## Terraform modules redesign
+
+- Renamed `modules/ipam` to `modules/ipam-infra` for clarity
+- Replaced `modules/ipam-client` with new `modules/ipam-network` - domain-centric design: one routing domain with a root CIDR block, network blocks carved from it
+- Added `database_backup_configuration` variable to `modules/ipam-infra` - exposes all backup settings as a configurable object with defaults; removed hardcoded values; added validation that `retained_backups > transaction_log_retention_days` when backup is enabled
+- Added `domain` object variable to `modules/ipam-network` - combines domain name and root CIDR into a single input (`name` + `cidr`)
+- Added per-network label override to `modules/ipam-network` - module-level labels are inherited by all network blocks; per-network labels fully override them when set
+- Added `README.md` per module generated via `terraform-docs`
+- Added `.terraform-docs.yml` at repo root - single config for all modules
+- Added `make docs-modules` target - regenerates README for all modules
+- Added `make update-version VERSION=x.y.z` target - updates all `?ref=` and provider version constraints across the repo
+- Renamed `examples/sandbox` to `examples/infra`
+- Renamed `examples/sandbox-client` to `examples/sandbox-gcp-vpc` - extended with GCP VPC and subnet creation using IPAM-allocated CIDRs
+- Removed outdated examples: `simple-example`, `vpc-example`, `example-with-multiple-ranges`
 
 ## Provider documentation
 
