@@ -76,36 +76,27 @@ provider "ipam" {
 module "prod_network" {
   source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-network?ref=v1.9.0"
 
-  domain = "prod-vpc"
+  domain = {
+    name = "prod-vpc"
+    cidr = "10.0.0.0/8"
+  }
   labels = { env = "prod" }
 
   networks = {
-    "tenant" = {
-      size   = 16
-      labels = { purpose = "tenant-workloads" }
-    }
-    "gke-nodes" = {
-      size   = 16
-      labels = { purpose = "gke-nodes" }
-    }
-    "gke-pods" = {
-      size   = 16
-      labels = { purpose = "gke-pods" }
-    }
-    "gke-services" = {
-      size   = 16
-      labels = { purpose = "gke-services" }
-    }
+    "tenant"       = { size = 16 }
+    "gke-nodes"    = { size = 16 }
+    "gke-pods"     = { size = 16 }
+    "gke-services" = { size = 16 }
   }
 }
 
 # Allocate a tenant subnet from the tenant block
 resource "ipam_ip_range" "my_team" {
-  name   = "my-team-prod"
-  size   = 22
-  domain = module.prod_network.domain_id
-  parent = module.prod_network.networks["tenant"].cidr
-  labels = { team = "my-team", env = "prod" }
+  name       = "my-team-prod"
+  range_size = 22
+  domain     = module.prod_network.domain.id
+  parent     = module.prod_network.networks["tenant"].cidr
+  labels     = { team = "my-team", env = "prod" }
 }
 ```
 
@@ -120,7 +111,8 @@ resource "ipam_routing_domain" "prod" {
 
 resource "ipam_ip_range" "root" {
   name       = "prod-root"
-  range_size = 16
+  cidr       = "10.0.0.0/8"
+  range_size = 8
   domain     = ipam_routing_domain.prod.id
 }
 
@@ -266,7 +258,7 @@ my-vpc
 | Live (default) | `IPAM_CAI_ORG_ID` only | CAI API queried on every allocation; always up to date |
 | DB sync | `IPAM_CAI_ORG_ID` + `IPAM_CAI_DB_SYNC=TRUE` | Subnets cached in `cai_subnets` table, refreshed every `IPAM_CAI_SYNC_INTERVAL`; fast, no per-request CAI latency |
 
-**Required IAM** — the Cloud Run service account needs `roles/cloudasset.viewer` at the organisation level (granted automatically by the `modules/ipam` Terraform module when `organization_id` is set).
+**Required IAM** - the Cloud Run service account needs `roles/cloudasset.viewer` at the organisation level (granted automatically by `modules/ipam-infra` when `organization_id` is set).
 
 ---
 
