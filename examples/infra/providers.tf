@@ -6,7 +6,17 @@
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 
-variable "ipam_url" {
-  description = "URL of the deployed IPAM Autopilot Cloud Run service (from examples/sandbox output)."
-  type        = string
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.0"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
 }
