@@ -19,7 +19,7 @@ Use the `modules/ipam-infra` Terraform module to deploy the IPAM backend to GCP:
 
 ```hcl
 module "ipam" {
-  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.9.0"
+  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.11.0"
 
   project_id      = "my-project"
   region          = "europe-west1"
@@ -64,7 +64,7 @@ terraform {
   required_providers {
     ipam = {
       source  = "boozt-platform/ipam-autopilot"
-      version = "~> 1.9"
+      version = "~> 1.11"
     }
   }
 }
@@ -74,7 +74,7 @@ provider "ipam" {
 }
 
 module "prod_network" {
-  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-network?ref=v1.9.0"
+  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-network?ref=v1.11.0"
 
   domain = {
     name = "prod-vpc"
@@ -110,10 +110,9 @@ resource "ipam_routing_domain" "prod" {
 }
 
 resource "ipam_ip_range" "root" {
-  name       = "prod-root"
-  cidr       = "10.0.0.0/8"
-  range_size = 8 # must match the prefix length of cidr
-  domain     = ipam_routing_domain.prod.id
+  name   = "prod-root"
+  cidr   = "10.0.0.0/8"
+  domain = ipam_routing_domain.prod.id
 }
 
 resource "ipam_ip_range" "gke_nodes" {

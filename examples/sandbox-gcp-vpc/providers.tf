@@ -20,11 +20,11 @@ terraform {
   required_providers {
     ipam = {
       source  = "boozt-platform/ipam-autopilot"
-      version = "~> 1.8"
+      version = "~> 1.11"
     }
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.0"
+      version = "~> 1.11"
     }
   }
 }

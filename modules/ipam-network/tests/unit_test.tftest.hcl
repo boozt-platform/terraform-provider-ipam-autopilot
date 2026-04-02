@@ -16,8 +16,9 @@ mock_provider "ipam" {
 
   mock_resource "ipam_ip_range" {
     defaults = {
-      id   = "1"
-      cidr = "10.0.0.0/8"
+      id         = "1"
+      cidr       = "10.0.0.0/8"
+      range_size = 8
     }
   }
 }

@@ -8,6 +8,7 @@
 *.dll
 *.so
 *.dylib
+terraform-provider-ipam-autopilot
 
 # Test binary, built with `go test -c`
 *.test
@@ -78,4 +79,4 @@ public.key
 
 # Compiled binaries
 container/container
-provider/terraform-provider-ipam-autopilot
+provider/terraform-provider-ipam-autopilot.test.tfrc

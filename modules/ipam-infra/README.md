@@ -6,7 +6,7 @@ Deploys the IPAM Autopilot backend to GCP — Cloud Run service, Cloud SQL (MySQ
 
 ```hcl
 module "ipam" {
-  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.9.0"
+  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.11.0"
 
   project_id = "my-project"
   region     = "europe-west1"
@@ -30,7 +30,7 @@ output "ipam_url" {
 | <a name="input_cloud_sql_private_ip"></a> [cloud\_sql\_private\_ip](#input\_cloud\_sql\_private\_ip) | Use private IP for Cloud SQL. Requires VPC peering with servicenetworking. Recommended for production. | `bool` | `true` | no |
 | <a name="input_cloud_sql_proxy_image"></a> [cloud\_sql\_proxy\_image](#input\_cloud\_sql\_proxy\_image) | Cloud SQL Auth Proxy container image. Pin to a specific version for production stability. | `string` | `"gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.21.2"` | no |
 | <a name="input_create_database"></a> [create\_database](#input\_create\_database) | Whether to create a new Cloud SQL instance. Set to false to use an existing instance via database\_instance\_connection\_name. | `bool` | `true` | no |
-| <a name="input_database_backup_configuration"></a> [database\_backup\_configuration](#input\_database\_backup\_configuration) | Cloud SQL backup configuration for the IPAM database. | <pre>object({<br/>    enabled                        = optional(bool, true)<br/>    binary_log_enabled             = optional(bool, true)<br/>    start_time                     = optional(string, "02:00")<br/>    location                       = optional(string, null)<br/>    transaction_log_retention_days = optional(string, "7")<br/>    retained_backups               = optional(number, 7)<br/>    retention_unit                 = optional(string, "COUNT")<br/>    point_in_time_recovery_enabled = optional(bool, false)<br/>  })</pre> | `{}` | no |
+| <a name="input_database_backup_configuration"></a> [database\_backup\_configuration](#input\_database\_backup\_configuration) | Cloud SQL backup configuration for the IPAM database. | <pre>object({<br/>    enabled                        = optional(bool, true)<br/>    binary_log_enabled             = optional(bool, true)<br/>    start_time                     = optional(string, "02:00")<br/>    location                       = optional(string, null)<br/>    transaction_log_retention_days = optional(string, "7")<br/>    retained_backups               = optional(number, 14)<br/>    retention_unit                 = optional(string, "COUNT")<br/>  })</pre> | `{}` | no |
 | <a name="input_database_deletion_protection"></a> [database\_deletion\_protection](#input\_database\_deletion\_protection) | Enable deletion protection on the Cloud SQL instance. | `bool` | `true` | no |
 | <a name="input_database_instance_connection_name"></a> [database\_instance\_connection\_name](#input\_database\_instance\_connection\_name) | Existing Cloud SQL instance connection name (project:region:instance). Required when create\_database = false. | `string` | `null` | no |
 | <a name="input_database_instance_name"></a> [database\_instance\_name](#input\_database\_instance\_name) | Name for the Cloud SQL instance. | `string` | `"ipam-mysql"` | no |

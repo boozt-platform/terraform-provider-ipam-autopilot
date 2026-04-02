@@ -48,6 +48,11 @@ jobs:
       - name: Test provider
         run: go test ./...
         working-directory: provider
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.11.5"
+      - name: Test modules
+        run: make test-modules
 
   integration:
     name: Integration tests

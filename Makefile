@@ -10,11 +10,15 @@ REPO_ROOT    := $(shell pwd)
 PROVIDER_DIR := $(REPO_ROOT)/provider
 LOCAL_DEV_DIR := $(REPO_ROOT)/examples/local-dev
 
-.PHONY: help lint lint-docker test test-integration build-provider dev-setup dev-plan dev-apply dev-destroy docs docs-modules update-version
+.PHONY: help check lint lint-docker fmt test test-modules test-integration build-provider dev-setup dev-plan dev-apply dev-destroy docs docs-modules update-version
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+## ── Pre-commit gate ─────────────────────────────────────────────────────────
+
+check: lint fmt test build-provider docs docs-modules ## Full local gate: lint + fmt + test + docs + build (run before every commit)
 
 ## ── Code quality ────────────────────────────────────────────────────────────
 
@@ -35,10 +39,17 @@ fmt: ## Format all Go code
 test: ## Run unit tests (container + provider + modules)
 	cd $(REPO_ROOT)/container && go test ./...
 	cd $(REPO_ROOT)/provider  && go test ./...
+	$(MAKE) test-modules
+
+test-modules: build-provider ## Run HCL unit tests for all modules using locally built provider
+	@printf 'provider_installation {\n  dev_overrides { "boozt-platform/ipam-autopilot" = "%s" }\n  direct {}\n}\n' \
+		"$(PROVIDER_DIR)" > $(REPO_ROOT)/.test.tfrc
 	@for mod in $(REPO_ROOT)/modules/*/; do \
 		echo "Testing $$(basename $$mod)..."; \
-		cd $$mod && IPAM_URL=http://localhost:8080 tofu test; \
+		cd $$mod && tofu init -upgrade -input=false -no-color > /dev/null && \
+		TF_CLI_CONFIG_FILE=$(REPO_ROOT)/.test.tfrc IPAM_URL=http://localhost:8080 tofu test; \
 	done
+	@rm -f $(REPO_ROOT)/.test.tfrc
 
 test-integration: ## Run integration tests (requires Docker)
 	cd $(REPO_ROOT)/container && go test -tags=integration -timeout=10m ./tests/...
@@ -94,12 +105,12 @@ update-version: ## Update all version references (usage: make update-version VER
 		\( -name "*.md" -o -name "*.md.tmpl" -o -name "*.tf" \) \
 		-not -path "*/.terraform/*" \
 		-not -path "*/.git/*" \
-		| xargs sed -i '' \
-		-e 's|?ref=v[0-9]*\.[0-9]*\.[0-9]*|?ref=$(VERSION)|g'
+		| xargs perl -pi -e \
+		's|\?ref=v[0-9]+\.[0-9]+\.[0-9]+|?ref=$(VERSION)|g'
 	@# Update provider version constraint only in files that reference boozt-platform/ipam-autopilot
 	@grep -rl 'boozt-platform/ipam-autopilot' $(REPO_ROOT) \
 		--include="*.tf" --include="*.md" --include="*.md.tmpl" \
 		--exclude-dir=".terraform" --exclude-dir=".git" \
-		| xargs sed -i '' \
-		-e 's|version = "~> [0-9]*\.[0-9]*"|version = "~> $(MINOR)"|g'
+		| xargs perl -pi -e \
+		's|version = "~> [0-9]+\.[0-9]+"|version = "~> $(MINOR)"|g'
 	@echo "Done. Run 'make docs && make docs-modules' to regenerate docs."

@@ -11,11 +11,10 @@ resource "ipam_routing_domain" "this" {
 }
 
 resource "ipam_ip_range" "root" {
-  name       = var.domain.name
-  cidr       = var.domain.cidr
-  range_size = tonumber(split("/", var.domain.cidr)[1])
-  domain     = ipam_routing_domain.this.id
-  labels     = var.labels
+  name   = var.domain.name
+  cidr   = var.domain.cidr
+  domain = ipam_routing_domain.this.id
+  labels = var.labels
 }
 
 resource "ipam_ip_range" "network" {
