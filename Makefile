@@ -10,11 +10,15 @@ REPO_ROOT    := $(shell pwd)
 PROVIDER_DIR := $(REPO_ROOT)/provider
 LOCAL_DEV_DIR := $(REPO_ROOT)/examples/local-dev
 
-.PHONY: help lint lint-docker test test-integration build-provider dev-setup dev-plan dev-apply dev-destroy docs docs-modules update-version
+.PHONY: help check lint lint-docker fmt test test-modules test-integration build-provider dev-setup dev-plan dev-apply dev-destroy docs docs-modules update-version
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}'
+
+## ── Pre-commit gate ─────────────────────────────────────────────────────────
+
+check: lint fmt test build-provider ## Full local gate: lint + fmt + test + build (run before every commit)
 
 ## ── Code quality ────────────────────────────────────────────────────────────
 
@@ -35,10 +39,16 @@ fmt: ## Format all Go code
 test: ## Run unit tests (container + provider + modules)
 	cd $(REPO_ROOT)/container && go test ./...
 	cd $(REPO_ROOT)/provider  && go test ./...
+	$(MAKE) test-modules
+
+test-modules: build-provider ## Run HCL unit tests for all modules using locally built provider
+	@printf 'provider_installation {\n  dev_overrides { "boozt-platform/ipam-autopilot" = "%s" }\n  direct {}\n}\n' \
+		"$(PROVIDER_DIR)" > $(REPO_ROOT)/.test.tfrc
 	@for mod in $(REPO_ROOT)/modules/*/; do \
 		echo "Testing $$(basename $$mod)..."; \
-		cd $$mod && IPAM_URL=http://localhost:8080 tofu test; \
+		cd $$mod && TF_CLI_CONFIG_FILE=$(REPO_ROOT)/.test.tfrc IPAM_URL=http://localhost:8080 tofu test; \
 	done
+	@rm -f $(REPO_ROOT)/.test.tfrc
 
 test-integration: ## Run integration tests (requires Docker)
 	cd $(REPO_ROOT)/container && go test -tags=integration -timeout=10m ./tests/...

@@ -78,4 +78,4 @@ public.key
 
 # Compiled binaries
 container/container
-provider/terraform-provider-ipam-autopilot
+provider/terraform-provider-ipam-autopilot.test.tfrc

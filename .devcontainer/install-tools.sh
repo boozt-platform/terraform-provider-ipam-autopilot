@@ -24,7 +24,7 @@ curl -sSfL "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VE
 chmod +x /usr/local/bin/hadolint
 
 # opentofu
-TOFU_VERSION="1.9.1"
+TOFU_VERSION="1.11.5"
 curl -sSfL "https://github.com/opentofu/opentofu/releases/download/v${TOFU_VERSION}/tofu_${TOFU_VERSION}_linux_${ARCH}.tar.gz" \
   | tar -xz -C /usr/local/bin tofu
 
