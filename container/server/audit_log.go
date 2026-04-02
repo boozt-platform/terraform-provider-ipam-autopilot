@@ -21,6 +21,7 @@ import (
 
 const (
 	ActionCreate = "create"
+	ActionUpdate = "update"
 	ActionDelete = "delete"
 
 	ResourceRange  = "range"

@@ -48,6 +48,10 @@ type RangeRequest struct {
 	Labels     map[string]string `json:"labels"`
 }
 
+type UpdateRangeRequest struct {
+	Labels map[string]string `json:"labels"`
+}
+
 type ImportRangeItem struct {
 	Name   string            `json:"name"`
 	Cidr   string            `json:"cidr"`
@@ -221,6 +225,68 @@ func GetRange(c *fiber.Ctx) error {
 		"name":   rang.Name,
 		"cidr":   rang.Cidr,
 		"labels": rang.Labels,
+	})
+}
+
+func UpdateRange(c *fiber.Ctx) error {
+	id, err := strconv.ParseInt(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(400).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("%v", err),
+		})
+	}
+
+	p := new(UpdateRangeRequest)
+	if err := c.BodyParser(p); err != nil {
+		return c.Status(400).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("Bad format %v", err),
+		})
+	}
+
+	for k, v := range p.Labels {
+		if k == "" || v == "" {
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": "label keys and values must not be empty",
+			})
+		}
+		if len(k) > 63 {
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": fmt.Sprintf("label key %q must not exceed 63 characters", k),
+			})
+		}
+		if len(v) > 255 {
+			return c.Status(400).JSON(&fiber.Map{
+				"success": false,
+				"message": fmt.Sprintf("label value for key %q must not exceed 255 characters", v),
+			})
+		}
+	}
+
+	rang, err := GetRangeFromDB(id)
+	if err != nil {
+		return c.Status(404).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("range not found: %v", err),
+		})
+	}
+
+	if err := UpdateRangeLabelsInDb(id, p.Labels); err != nil {
+		return c.Status(503).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("failed updating range: %v", err),
+		})
+	}
+
+	writeAuditLog(ActionUpdate, ResourceRange, int(id), rang.Name, map[string]string{"cidr": rang.Cidr})
+	return c.Status(200).JSON(&fiber.Map{
+		"id":     id,
+		"name":   rang.Name,
+		"cidr":   rang.Cidr,
+		"labels": p.Labels,
 	})
 }
 
