@@ -14,7 +14,7 @@ Use the `modules/ipam-infra` module from the [boozt-platform/ipam-autopilot](htt
 
 ```hcl
 module "ipam" {
-  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.9.0"
+  source = "github.com/boozt-platform/ipam-autopilot//modules/ipam-infra?ref=v1.11.0"
 
   project_id = "my-gcp-project"
   region     = "europe-west1"
@@ -34,7 +34,7 @@ terraform {
   required_providers {
     ipam = {
       source  = "boozt-platform/ipam-autopilot"
-      version = "~> 1.9"
+      version = "~> 1.11"
     }
   }
 }

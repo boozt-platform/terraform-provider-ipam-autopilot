@@ -57,7 +57,6 @@ resource "ipam_ip_range" "reserved" {
 ### Required
 
 - `name` (String) Unique name for the IP range.
-- `range_size` (Number) Prefix length of the subnet to allocate (e.g. `22` for a `/22`).
 
 ### Optional
 
@@ -65,6 +64,7 @@ resource "ipam_ip_range" "reserved" {
 - `domain` (String) Routing domain ID. When omitted the first routing domain is used.
 - `labels` (Map of String) Key/value labels to attach to the range. Keys must be ≤ 63 characters, values ≤ 255 characters.
 - `parent` (String) Parent CIDR block from which the range is allocated (e.g. `10.0.0.0/16`). When omitted the routing domain's root range is used.
+- `range_size` (Number) Prefix length of the subnet to allocate (e.g. `22` for a `/22`). When `cidr` is set, this is derived automatically from the prefix length and can be omitted.
 
 ### Read-Only
 
