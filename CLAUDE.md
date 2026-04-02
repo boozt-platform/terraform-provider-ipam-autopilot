@@ -33,7 +33,9 @@ Write tests before committing. All three layers apply depending on what changed:
 |---|---|---|---|
 | Go unit | `container/server/*_test.go`, `provider/ipam/resources/*_test.go` | `go test ./...` | Any Go logic change |
 | Go integration | `container/tests/*_test.go` (build tag `integration`) | `make test-integration` | Any API endpoint change |
-| HCL unit | `modules/*/tests/unit_test.tftest.hcl` | `make test` | Any module change |
+| HCL unit | `modules/*/tests/unit_test.tftest.hcl` | `make test-modules` | Any module or provider schema change |
+
+`make test-modules` builds the provider locally and runs `tofu test` with a `dev_overrides` tfrc - always tests against local code, not the published registry version. Never run `tofu test` directly in a module directory without the dev override, or it will download the published provider and miss local changes.
 
 ### 3. Documentation
 
