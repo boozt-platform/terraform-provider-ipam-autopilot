@@ -250,6 +250,75 @@ func TestCreateRange_LabelValueTooLong(t *testing.T) {
 	assert.Equal(t, 400, status)
 }
 
+func TestUpdateRange_Labels(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := server.NewApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	_, createBody := doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "update-labels-test",
+		"cidr":   "10.40.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+		"labels": map[string]string{"env": "dev"},
+	})
+	var created map[string]interface{}
+	require.NoError(t, json.Unmarshal(createBody, &created))
+	id := int(created["id"].(float64))
+
+	status, body := doRequestWithStatus(app, "PUT", fmt.Sprintf("/api/v1/ranges/%d", id), map[string]interface{}{
+		"labels": map[string]string{"env": "prod", "team": "platform"},
+	})
+	assert.Equal(t, 200, status)
+
+	var updated map[string]interface{}
+	require.NoError(t, json.Unmarshal(body, &updated))
+	labels := updated["labels"].(map[string]interface{})
+	assert.Equal(t, "prod", labels["env"])
+	assert.Equal(t, "platform", labels["team"])
+}
+
+func TestUpdateRange_ClearLabels(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := server.NewApp(database)
+
+	domainID, _ := setupDomainAndParent(t, app)
+
+	_, createBody := doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name":   "clear-labels-test",
+		"cidr":   "10.41.0.0/24",
+		"domain": fmt.Sprintf("%d", domainID),
+		"labels": map[string]string{"env": "dev"},
+	})
+	var created map[string]interface{}
+	require.NoError(t, json.Unmarshal(createBody, &created))
+	id := int(created["id"].(float64))
+
+	status, _ := doRequestWithStatus(app, "PUT", fmt.Sprintf("/api/v1/ranges/%d", id), map[string]interface{}{
+		"labels": map[string]string{},
+	})
+	assert.Equal(t, 200, status)
+
+	_, getBody := doRequest(app, "GET", fmt.Sprintf("/api/v1/ranges/%d", id), nil)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(getBody, &resp))
+	labels := resp["labels"].(map[string]interface{})
+	assert.Empty(t, labels)
+}
+
+func TestUpdateRange_NotFound(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := server.NewApp(database)
+
+	status, _ := doRequestWithStatus(app, "PUT", "/api/v1/ranges/99999", map[string]interface{}{
+		"labels": map[string]string{"env": "prod"},
+	})
+	assert.Equal(t, 404, status)
+}
+
 func TestImportRanges_Basic(t *testing.T) {
 	database, cleanup := setupTestDB(t)
 	defer cleanup()
