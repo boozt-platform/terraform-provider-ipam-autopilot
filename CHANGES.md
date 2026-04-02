@@ -112,6 +112,8 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - Switched to `gcr.io/distroless/static-debian12:nonroot` base image - runs as `nonroot` (UID 65532) by default; explicit `USER nonroot:nonroot` instruction added for clarity
 - Added `hadolint` Dockerfile linting - `make lint-docker` runs locally; `hadolint/hadolint-action@v3.1.0` added to CI lint job
 - Added `.pre-commit-config.yaml` - `hadolint` and `gofmt` run automatically on `git commit` after `pre-commit install`
+- Updated `.devcontainer/install-tools.sh` - added `hadolint`, `opentofu`, `terraform-docs`, `pre-commit`; updated help text
+- Added `exiasr.hadolint` VS Code extension to devcontainer
 
 ## In-place label updates
 
