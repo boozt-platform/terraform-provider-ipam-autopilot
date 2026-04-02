@@ -46,7 +46,8 @@ test-modules: build-provider ## Run HCL unit tests for all modules using locally
 		"$(PROVIDER_DIR)" > $(REPO_ROOT)/.test.tfrc
 	@for mod in $(REPO_ROOT)/modules/*/; do \
 		echo "Testing $$(basename $$mod)..."; \
-		cd $$mod && TF_CLI_CONFIG_FILE=$(REPO_ROOT)/.test.tfrc IPAM_URL=http://localhost:8080 tofu test; \
+		cd $$mod && tofu init -upgrade -input=false -no-color > /dev/null && \
+		TF_CLI_CONFIG_FILE=$(REPO_ROOT)/.test.tfrc IPAM_URL=http://localhost:8080 tofu test; \
 	done
 	@rm -f $(REPO_ROOT)/.test.tfrc
 
