@@ -107,6 +107,12 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - Renamed `examples/sandbox-client` to `examples/sandbox-gcp-vpc` - extended with GCP VPC and subnet creation using IPAM-allocated CIDRs
 - Removed outdated examples: `simple-example`, `vpc-example`, `example-with-multiple-ranges`
 
+## In-place label updates
+
+- Added `PUT /api/v1/ranges/:id` - updates labels on an existing range without destroying it; accepts `{ "labels": {...} }`, validates keys/values, writes an audit log entry
+- Removed `ForceNew` from `labels` in `ipam_ip_range` provider resource - label changes now trigger an in-place update instead of destroy+recreate
+- Added `resourceUpdate` to Terraform provider - calls `PUT /ranges/:id` with the new labels map
+
 ## Provider documentation
 
 - Added `provider/docs/` - OpenTofu registry-compatible documentation generated via `terraform-plugin-docs`; covers provider index, `ipam_ip_range` resource, `ipam_routing_domain` resource, `ipam_ip_range` data source, and a getting-started guide
