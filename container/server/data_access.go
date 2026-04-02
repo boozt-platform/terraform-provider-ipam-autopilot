@@ -140,6 +140,23 @@ func GetRangesForParentFromDB(tx *sql.Tx, parent_id int64) ([]Range, error) {
 	return ranges, nil
 }
 
+func GetChildRangeCIDRsFromDB(id int64) ([]string, error) {
+	rows, err := db.Query("SELECT cidr FROM subnets WHERE parent_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close() //nolint:errcheck
+	var cidrs []string
+	for rows.Next() {
+		var cidrVal string
+		if err := rows.Scan(&cidrVal); err != nil {
+			return nil, err
+		}
+		cidrs = append(cidrs, cidrVal)
+	}
+	return cidrs, rows.Err()
+}
+
 func GetRangeFromDB(id int64) (*Range, error) {
 	var subnet_id int
 	var routing_domain_id int

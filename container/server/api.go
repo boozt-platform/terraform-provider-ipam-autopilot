@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"os"
 	"strconv"
@@ -50,6 +51,44 @@ type RangeRequest struct {
 
 type UpdateRangeRequest struct {
 	Labels map[string]string `json:"labels"`
+}
+
+type RangeStats struct {
+	TotalAddresses int64   `json:"total_addresses"`
+	UsedAddresses  int64   `json:"used_addresses"`
+	FreeAddresses  int64   `json:"free_addresses"`
+	UtilizationPct float64 `json:"utilization_pct"`
+}
+
+func computeStats(cidrStr string, childCIDRs []string) (RangeStats, error) {
+	_, ipNet, err := net.ParseCIDR(cidrStr)
+	if err != nil {
+		return RangeStats{}, fmt.Errorf("invalid cidr %q: %w", cidrStr, err)
+	}
+	ones, bits := ipNet.Mask.Size()
+	total := int64(1) << (bits - ones)
+
+	var used int64
+	for _, child := range childCIDRs {
+		_, childNet, err := net.ParseCIDR(child)
+		if err != nil {
+			continue
+		}
+		childOnes, childBits := childNet.Mask.Size()
+		used += int64(1) << (childBits - childOnes)
+	}
+
+	free := total - used
+	var pct float64
+	if total > 0 {
+		pct = math.Round(float64(used)/float64(total)*10000) / 100
+	}
+	return RangeStats{
+		TotalAddresses: total,
+		UsedAddresses:  used,
+		FreeAddresses:  free,
+		UtilizationPct: pct,
+	}, nil
 }
 
 type ImportRangeItem struct {
@@ -219,12 +258,28 @@ func GetRange(c *fiber.Ctx) error {
 		})
 	}
 
+	childCIDRs, err := GetChildRangeCIDRsFromDB(id)
+	if err != nil {
+		return c.Status(503).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("failed fetching child ranges: %v", err),
+		})
+	}
+	stats, err := computeStats(rang.Cidr, childCIDRs)
+	if err != nil {
+		return c.Status(503).JSON(&fiber.Map{
+			"success": false,
+			"message": fmt.Sprintf("failed computing stats: %v", err),
+		})
+	}
+
 	return c.Status(200).JSON(&fiber.Map{
 		"id":     rang.Subnet_id,
 		"parent": rang.Parent_id,
 		"name":   rang.Name,
 		"cidr":   rang.Cidr,
 		"labels": rang.Labels,
+		"stats":  stats,
 	})
 }
 
