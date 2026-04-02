@@ -18,7 +18,7 @@ help: ## Show available targets
 
 ## ── Pre-commit gate ─────────────────────────────────────────────────────────
 
-check: lint fmt test build-provider ## Full local gate: lint + fmt + test + build (run before every commit)
+check: lint fmt test build-provider docs docs-modules ## Full local gate: lint + fmt + test + docs + build (run before every commit)
 
 ## ── Code quality ────────────────────────────────────────────────────────────
 
@@ -105,12 +105,12 @@ update-version: ## Update all version references (usage: make update-version VER
 		\( -name "*.md" -o -name "*.md.tmpl" -o -name "*.tf" \) \
 		-not -path "*/.terraform/*" \
 		-not -path "*/.git/*" \
-		| xargs sed -i '' \
-		-e 's|?ref=v[0-9]*\.[0-9]*\.[0-9]*|?ref=$(VERSION)|g'
+		| xargs perl -pi -e \
+		's|\?ref=v[0-9]+\.[0-9]+\.[0-9]+|?ref=$(VERSION)|g'
 	@# Update provider version constraint only in files that reference boozt-platform/ipam-autopilot
 	@grep -rl 'boozt-platform/ipam-autopilot' $(REPO_ROOT) \
 		--include="*.tf" --include="*.md" --include="*.md.tmpl" \
 		--exclude-dir=".terraform" --exclude-dir=".git" \
-		| xargs sed -i '' \
-		-e 's|version = "~> [0-9]*\.[0-9]*"|version = "~> $(MINOR)"|g'
+		| xargs perl -pi -e \
+		's|version = "~> [0-9]+\.[0-9]+"|version = "~> $(MINOR)"|g'
 	@echo "Done. Run 'make docs && make docs-modules' to regenerate docs."

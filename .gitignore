@@ -8,6 +8,7 @@
 *.dll
 *.so
 *.dylib
+terraform-provider-ipam-autopilot
 
 # Test binary, built with `go test -c`
 *.test
