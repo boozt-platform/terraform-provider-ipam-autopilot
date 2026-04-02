@@ -27,9 +27,11 @@
         "go.lintTool": "golangci-lint",
         "go.lintFlags": ["--fast"],
         "files.associations": {
-          "*.tftest.hcl": "terraform",
-          "*.tf": "terraform",
-          "*.tfvars": "terraform"
+          "*.hcl": "hcl",
+          "*.tftest.hcl": "hcl",
+          "*.tf": "hcl",
+          "*.tfvars": "hcl",
+          "*.tfrc": "hcl"
         }
       }
     }

@@ -405,3 +405,39 @@ func TestImportRanges_ValidationErrors(t *testing.T) {
 	assert.Equal(t, float64(1), result["imported"])
 	assert.Len(t, result["errors"].([]interface{}), 2)
 }
+
+func TestGetRange_IncludesStats(t *testing.T) {
+	database, cleanup := setupTestDB(t)
+	defer cleanup()
+	app := server.NewApp(database)
+
+	domainID, parentID := setupDomainAndParent(t, app)
+
+	// Allocate two child ranges from the parent.
+	doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name": "child-a", "range_size": 22,
+		"parent": fmt.Sprintf("%d", parentID),
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+	doRequest(app, "POST", "/api/v1/ranges", map[string]interface{}{
+		"name": "child-b", "range_size": 22,
+		"parent": fmt.Sprintf("%d", parentID),
+		"domain": fmt.Sprintf("%d", domainID),
+	})
+
+	status, body := doRequestWithStatus(app, "GET", fmt.Sprintf("/api/v1/ranges/%d", parentID), nil)
+	assert.Equal(t, 200, status)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(body, &resp))
+
+	stats, ok := resp["stats"].(map[string]interface{})
+	require.True(t, ok, "stats field missing from response")
+
+	// Parent is 10.0.0.0/8 = 16777216 addresses.
+	assert.Equal(t, float64(16777216), stats["total_addresses"])
+	// Two /22 children = 2 * 1024 = 2048 used.
+	assert.Equal(t, float64(2048), stats["used_addresses"])
+	assert.Equal(t, float64(16777216-2048), stats["free_addresses"])
+	assert.Greater(t, stats["utilization_pct"].(float64), float64(0))
+}
