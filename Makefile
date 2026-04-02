@@ -10,7 +10,7 @@ REPO_ROOT    := $(shell pwd)
 PROVIDER_DIR := $(REPO_ROOT)/provider
 LOCAL_DEV_DIR := $(REPO_ROOT)/examples/local-dev
 
-.PHONY: help check lint lint-docker fmt test test-modules test-integration build-provider dev-setup dev-plan dev-apply dev-destroy docs docs-modules update-version
+.PHONY: help check lint lint-docker fmt test test-modules test-integration build-provider dev-setup docker-up dev-plan dev-apply dev-destroy docs docs-modules update-version
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -59,7 +59,12 @@ test-integration: ## Run integration tests (requires Docker)
 build-provider: ## Build the Terraform provider binary
 	cd $(PROVIDER_DIR) && go build -o terraform-provider-ipam-autopilot .
 
-dev-setup: build-provider ## Build provider and generate dev.tfrc
+dev-setup: build-provider docker-up ## Build provider, start docker-compose stack, and generate dev.tfrc
+
+docker-up: ## Start docker-compose stack (rebuild if source changed)
+	docker compose up --build -d
+
+
 	@echo 'provider_installation {'                                           > $(LOCAL_DEV_DIR)/dev.tfrc
 	@echo '  dev_overrides {'                                                >> $(LOCAL_DEV_DIR)/dev.tfrc
 	@echo '    "boozt-platform/ipam-autopilot" = "$(PROVIDER_DIR)"'         >> $(LOCAL_DEV_DIR)/dev.tfrc

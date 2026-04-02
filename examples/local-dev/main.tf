@@ -52,20 +52,65 @@ resource "ipam_ip_range" "gke_nodes" {
   range_size = 22
   parent     = ipam_ip_range.parent.cidr
   domain     = ipam_routing_domain.local.id
-  labels = {
-    env     = "local"
-    purpose = "gke-nodes"
-  }
+  labels     = { env = "local", purpose = "gke-nodes" }
+}
+
+resource "ipam_ip_range" "gke_pods" {
+  name       = "local-gke-pods"
+  range_size = 16
+  parent     = ipam_ip_range.parent.cidr
+  domain     = ipam_routing_domain.local.id
+  labels     = { env = "local", purpose = "gke-pods" }
+}
+
+resource "ipam_ip_range" "gke_services" {
+  name       = "local-gke-services"
+  range_size = 20
+  parent     = ipam_ip_range.parent.cidr
+  domain     = ipam_routing_domain.local.id
+  labels     = { env = "local", purpose = "gke-services" }
+}
+
+resource "ipam_ip_range" "mgmt" {
+  name       = "local-mgmt"
+  range_size = 24
+  parent     = ipam_ip_range.parent.cidr
+  domain     = ipam_routing_domain.local.id
+  labels     = { env = "local", purpose = "mgmt" }
 }
 
 data "ipam_ip_range" "gke_nodes_lookup" {
-  name = ipam_ip_range.gke_nodes.name
+  id = ipam_ip_range.gke_nodes.id
 }
 
-output "gke_nodes_cidr" {
-  value = ipam_ip_range.gke_nodes.cidr
+data "ipam_ip_range_stats" "parent_stats" {
+  id = ipam_ip_range.parent.id
+  depends_on = [
+    ipam_ip_range.gke_nodes,
+    ipam_ip_range.gke_pods,
+    ipam_ip_range.gke_services,
+    ipam_ip_range.mgmt,
+  ]
+}
+
+output "allocated_cidrs" {
+  value = {
+    gke_nodes    = ipam_ip_range.gke_nodes.cidr
+    gke_pods     = ipam_ip_range.gke_pods.cidr
+    gke_services = ipam_ip_range.gke_services.cidr
+    mgmt         = ipam_ip_range.mgmt.cidr
+  }
 }
 
 output "gke_nodes_cidr_via_datasource" {
   value = data.ipam_ip_range.gke_nodes_lookup.cidr
+}
+
+output "parent_stats" {
+  value = {
+    total_addresses = data.ipam_ip_range_stats.parent_stats.total_addresses
+    used_addresses  = data.ipam_ip_range_stats.parent_stats.used_addresses
+    free_addresses  = data.ipam_ip_range_stats.parent_stats.free_addresses
+    utilization_pct = data.ipam_ip_range_stats.parent_stats.utilization_pct
+  }
 }
