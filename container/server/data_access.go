@@ -310,6 +310,12 @@ func getDefaultRoutingDomain() (*RoutingDomain, error) {
 	}, nil
 }
 
+func UpdateRangeLabelsInDb(id int64, labels map[string]string) error {
+	labelsJSON := marshalLabels(labels)
+	_, err := db.Exec("UPDATE subnets SET labels = ? WHERE subnet_id = ?", labelsJSON, id)
+	return err
+}
+
 func DeleteRangeFromDb(id int64) error {
 	_, err := db.Query("DELETE FROM subnets WHERE subnet_id = ?", id)
 

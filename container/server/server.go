@@ -49,6 +49,7 @@ func NewApp(database *sql.DB) *fiber.App {
 	v1.Post("/ranges", CreateNewRange)
 	v1.Get("/ranges", GetRanges)
 	v1.Get("/ranges/:id", GetRange)
+	v1.Put("/ranges/:id", UpdateRange)
 	v1.Delete("/ranges/:id", DeleteRange)
 
 	v1.Get("/domains", GetRoutingDomains)
@@ -64,6 +65,7 @@ func NewApp(database *sql.DB) *fiber.App {
 	app.Post("/ranges", CreateNewRange)
 	app.Get("/ranges", GetRanges)
 	app.Get("/ranges/:id", GetRange)
+	app.Put("/ranges/:id", UpdateRange)
 	app.Delete("/ranges/:id", DeleteRange)
 
 	app.Get("/domains", GetRoutingDomains)

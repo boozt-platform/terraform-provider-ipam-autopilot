@@ -18,7 +18,8 @@
         "golang.go",
         "ms-azuretools.vscode-docker",
         "HashiCorp.HCL",
-        "hashicorp.terraform"
+        "hashicorp.terraform",
+        "exiasr.hadolint"
       ],
       "settings": {
         "go.toolsManagement.checkForUpdates": "local",
