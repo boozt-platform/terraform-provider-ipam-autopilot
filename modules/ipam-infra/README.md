@@ -37,6 +37,7 @@ output "ipam_url" {
 | <a name="input_database_name"></a> [database\_name](#input\_database\_name) | MySQL database name. | `string` | `"ipam"` | no |
 | <a name="input_database_tier"></a> [database\_tier](#input\_database\_tier) | Cloud SQL machine tier (e.g. db-f1-micro, db-n1-standard-1). | `string` | `"db-f1-micro"` | no |
 | <a name="input_database_version"></a> [database\_version](#input\_database\_version) | MySQL version for the Cloud SQL instance (e.g. MYSQL\_8\_0, MYSQL\_8\_4). | `string` | `"MYSQL_8_4"` | no |
+| <a name="input_db_collation"></a> [db\_collation](#input\_db\_collation) | The collation value. | `string` | `"utf8mb3_general_ci"` | no |
 | <a name="input_disable_database_migration"></a> [disable\_database\_migration](#input\_disable\_database\_migration) | Set to true to skip automatic database migration on startup. | `bool` | `false` | no |
 | <a name="input_image"></a> [image](#input\_image) | Container image for the IPAM Autopilot backend. | `string` | `"ghcr.io/boozt-platform/ipam-autopilot:latest"` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to all resources (Cloud Run service, Cloud SQL instance). | `map(string)` | `{}` | no |
