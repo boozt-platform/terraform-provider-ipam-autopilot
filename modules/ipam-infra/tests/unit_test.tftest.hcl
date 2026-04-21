@@ -160,6 +160,40 @@ run "backup_configuration_custom_values_accepted" {
   }
 }
 
+# ── Database edition ─────────────────────────────────────────────────────────
+
+run "database_edition_defaults_to_enterprise" {
+  command = plan
+
+  assert {
+    condition     = module.mysql[0].instance_name != ""
+    error_message = "MySQL instance should be planned with default ENTERPRISE edition."
+  }
+}
+
+run "database_edition_enterprise_plus_accepted" {
+  command = plan
+
+  variables {
+    database_edition = "ENTERPRISE_PLUS"
+  }
+
+  assert {
+    condition     = module.mysql[0].instance_name != ""
+    error_message = "MySQL instance should be planned with ENTERPRISE_PLUS edition."
+  }
+}
+
+run "database_edition_invalid_value_rejected" {
+  command = plan
+
+  variables {
+    database_edition = "INVALID"
+  }
+
+  expect_failures = [var.database_edition]
+}
+
 # ── Private Service Access ────────────────────────────────────────────────────
 
 run "private_service_access_created_with_private_ip" {

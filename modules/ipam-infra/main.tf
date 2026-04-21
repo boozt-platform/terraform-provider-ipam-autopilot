@@ -102,6 +102,7 @@ module "mysql" {
   region             = var.region
   zone               = var.zone
   tier               = var.database_tier
+  edition            = var.database_edition
   db_name            = var.database_name
   db_collation       = var.db_collation
   vpc_network        = data.google_compute_network.vpc.id
