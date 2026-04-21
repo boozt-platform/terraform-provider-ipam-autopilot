@@ -87,9 +87,19 @@ variable "database_instance_name" {
 }
 
 variable "database_tier" {
-  description = "Cloud SQL machine tier (e.g. db-f1-micro, db-n1-standard-1)."
+  description = "Cloud SQL machine tier (e.g. db-f1-micro, db-custom-2-3840, db-perf-optimized-N-2)."
   type        = string
   default     = "db-f1-micro"
+}
+
+variable "database_edition" {
+  description = "Cloud SQL edition: ENTERPRISE or ENTERPRISE_PLUS. ENTERPRISE supports db-custom-* tiers; ENTERPRISE_PLUS requires db-perf-optimized-N-* tiers."
+  type        = string
+  default     = "ENTERPRISE"
+  validation {
+    condition     = contains(["ENTERPRISE", "ENTERPRISE_PLUS"], var.database_edition)
+    error_message = "database_edition must be ENTERPRISE or ENTERPRISE_PLUS."
+  }
 }
 
 variable "database_name" {
