@@ -38,6 +38,7 @@ Original source: https://github.com/GoogleCloudPlatform/professional-services/tr
 - Added rate limiting middleware: 200 requests/min per IP, returns 429 on breach
 - Added integration tests covering all new validations and cascade delete behavior
 - Added `TestConcurrentAllocation` integration test verifying no overlapping CIDRs under concurrent load
+- Bumped Go dependencies in `container` and `provider` to fix reachable advisories reported by govulncheck: golang.org/x/net v0.61.0, google.golang.org/grpc v1.84.0, golang.org/x/text v0.43.0, golang.org/x/crypto v0.58.0, github.com/go-jose/go-jose/v4 v4.1.6, go.opentelemetry.io/otel v1.47.0, github.com/gofiber/fiber/v2 v2.52.15, github.com/valyala/fasthttp v1.76.0, github.com/klauspost/compress v1.20.3
 
 ---
 
